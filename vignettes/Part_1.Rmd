@@ -1,0 +1,138 @@
+---
+title: "Part 1. Data preprocessing"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Part_1}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Docker images mentioned here are locates at [GitHub Docker Images repository](https://github.com/anabeloff/docker_images)
+
+
+## QC AND TRIMM
+
+FASTQ files quality check with FastQC.
+The Docker image 'qualim' contains FastQC and Trimmomatic.  
+To use following code first we define variables for in-container script 'quali.sh'.  
+
+Primaty variable `ANALYSIS` has two options `trimm` and `fastqc`. First runs Trimmomatic then FastQC, while second just runs FastQC.  
+Place all FASTQ files in working directory. The script detects files with '.gz' extention.
+
+An example run:
+```{bash qc,eval=FALSE}
+docker run --rm --name="qc" \
+          -e ANALYSIS="fastqc" \
+          --mount 'type=bind,source=path/workingdir,target=/usr/local/src/rnaSeq/workingdrive' \
+          qualim
+```
+
+
+**IMPORTANT**  
+When using 'trimm' option with container based on 'qualim' **REMEMBER**, by default after trimming it will **DELETE** all original fastq and unpaired files. It leaves only paired reads files.  
+This feature was created to optimise the use of disc space on cloud platforms.  
+
+```{bash trim,eval=FALSE}
+docker run --rm --name="trim" \
+          -e THREADS=6 \
+          -e CROP_LEN=110 \
+          -e MIN_LEN=99 \
+          -e HEADCROP=10 \
+          -e ANALYSIS="trimm" \
+          --mount 'type=bind,source=path/workingdir,target=/usr/local/src/rnaSeq/workingdrive' \
+          qualim
+```
+
+## STAR ALIGNMENT
+
+To align with STAR (v.2.7) we first need to create a genome index. This step needs to be done only once.  
+Bacause it is not routine step we use interactive mode with STAR docker image.  
+To run following command, save in working directory a genome FASTA file and corresponding GTF annotation.
+
+```{bash star index,eval=FALSE}
+docker run -it --mount 'type=bind,source=path/workingdir,target=/usr/local/src/rnaSeq/workingdrive' staraligner /bin/bash
+
+# STAR index
+  STAR \
+    --runThreadN 8 \
+    --runMode genomeGenerate \
+    --genomeSAindexNbases 11 \
+    --genomeDir starIndex \
+    --genomeFastaFiles cp_genome.fa \
+    --sjdbGTFfile cp_genome.gtf
+```
+
+
+On clound platforms preferably to use memory optimised instances.  
+Alignment of large FASTQ files will require 16-32Gb of RAM.
+
+```{bash star index,eval=FALSE}
+docker run --detach\
+-e THREADS=8 \
+--mount 'type=bind,source=path/workingdir,target=/seqdata/workingdir' \
+staraligner /seqdata/star_InContainer_v2.sh *_paired.fastq.gz
+
+# Find container ID
+docker ps
+# Follow stdout in detached container
+docker logs -f <container ID>
+```
+
+## SE OBJECT
+
+Use BAM files from previous step to create count table.
+
+#### Annotation
+First we create annotation data base from GFF file.
+```{r gff db, eval=FALSE}
+library("Rsamtools")
+library("GenomicFeatures")
+library("GenomicAlignments")
+
+GFFFILE <- "cp_genome.gff"
+SPECIES_NAME <- "Cryphonectria parasitica"
+TXDB_FILE <- "crypa_annotation.sqlite"
+
+Format <- "gff3"
+
+transdb<-makeTxDbFromGFF(GFFFILE, format = Format, organism = SPECIES_NAME)
+
+saveDb(transdb, TXDB_FILE) 
+```
+
+Create Summarized Experiment Object.
+
+```{r se, eval=FALSE}
+library("Rsamtools")
+library("GenomicFeatures")
+library("GenomicAlignments")
+
+SE_NAME <- "se.RData"
+TXDB_FILE <- "crypa_annotation.sqlite"
+
+
+filenames <-list.files(".", recursive=TRUE, pattern=".bam$", full=TRUE)
+bamfiles <- BamFileList(filenames, yieldSize=200000)
+
+#Read annotation file
+transdb <- loadDb(TXDB_FILE)
+
+genes <- GenomicFeatures::genes(transdb) 
+
+se <- summarizeOverlaps(features=genes, reads=bamfiles,
+                        mode="Union",
+                        singleEnd=FALSE,
+                        ignore.strand=TRUE,
+                        fragments=TRUE )
+
+
+saveRDS(se, file = SE_NAME)
+```
+

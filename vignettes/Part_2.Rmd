@@ -1,0 +1,51 @@
+---
+title: "Part 2. Sample level data evaluation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Part_2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In this step we look on epression counts from individual sample perspective. Basically, we ask a question how different our samples are?
+
+In this analysis we have 4 groups of samples:
+
+- 3 Monoculture samples: P74-3, EP155, DZ-66
+- 2 Barrage samples: P74-3+EP155 and P74-3+DZ-66
+- 4 Control samples: P74-3, EP155, DZ-66 and P74-3+DZ-66
+- 1 Test sample: P74-3+EP155
+
+## Differential expression with DESeq2
+
+1. Load Summarized Experiment (SE) object.  
+
+The SE object contains count table and associated metadata. 
+```{r se}
+se <- readRDS(system.file("extdata", "se_vic3_2020.RData", package = "vic3PCD"))
+```
+
+2. Process raw data with DESeq2
+
+```{r dds}
+dds <- DESeqDataSet(se, design = ~ condition)
+dds$condition <- droplevels(dds$condition)
+dds$strains <- droplevels(dds$strains)
+dds <- collapseReplicates(dds, dds$exset)
+
+dds$condition <- relevel(dds$condition, ref = "Control")
+dds <- DESeq(dds, test = "Wald", sfType = "poscounts", useT = FALSE, minReplicatesForReplace = 7)
+keep <- rowSums(counts(dds)) >= 10
+dds <- dds[keep,]
+
+rld <- rlog(dds, blind = F)
+nt <- normTransform(dds, f = log2, pc = 1)
+```
+
