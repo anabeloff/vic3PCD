@@ -15,3 +15,13 @@ Suggests:
     rmarkdown
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
+Imports:
+    dplyr,
+    DESeq2,
+    edgeR,
+    pheatmap,
+    ggplot2,
+    RColorBrewer,
+    matrixStats,
+    kableExtra,
+    tibble

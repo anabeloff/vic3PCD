@@ -56,7 +56,7 @@ To align with STAR (v.2.7) we first need to create a genome index. This step nee
 Bacause it is not routine step we use interactive mode with STAR docker image.  
 To run following command, save in working directory a genome FASTA file and corresponding GTF annotation.
 
-```{bash star index,eval=FALSE}
+```{bash star index1, eval=FALSE}
 docker run -it --mount 'type=bind,source=path/workingdir,target=/usr/local/src/rnaSeq/workingdrive' staraligner /bin/bash
 
 # STAR index
@@ -73,7 +73,7 @@ docker run -it --mount 'type=bind,source=path/workingdir,target=/usr/local/src/r
 On clound platforms preferably to use memory optimised instances.  
 Alignment of large FASTQ files will require 16-32Gb of RAM.
 
-```{bash star index,eval=FALSE}
+```{bash star index2, eval=FALSE}
 docker run --detach\
 -e THREADS=8 \
 --mount 'type=bind,source=path/workingdir,target=/seqdata/workingdir' \

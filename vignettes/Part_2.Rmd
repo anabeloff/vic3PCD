@@ -14,9 +14,23 @@ knitr::opts_chunk$set(
 )
 ```
 
-In this step we look on epression counts from individual sample perspective. Basically, we ask a question how different our samples are?
+```{r setup, include=FALSE}
+library(vic3PCD)
+suppressMessages(library(DESeq2))
+suppressMessages(library(dplyr))
+suppressMessages(library(RColorBrewer))
+suppressMessages(library(ggplot2))
+suppressMessages(library(kableExtra))
+```
 
-In this analysis we have 4 groups of samples:
+
+
+When we get sequencing data our first question is there a difference in gene expression between Control and Treatment.  
+Before we dive into specic genes and probable molecular mechanisms we must evaluate the effect of the experimental conditions on gene expression.  
+
+In this step we look on expression counts from individual sample perspective. Basically, we ask a question how different our samples are?
+
+In this analysis we have 4 types of terminology we refer to samples:
 
 - 3 Monoculture samples: P74-3, EP155, DZ-66
 - 2 Barrage samples: P74-3+EP155 and P74-3+DZ-66
@@ -25,27 +39,63 @@ In this analysis we have 4 groups of samples:
 
 ## Differential expression with DESeq2
 
-1. Load Summarized Experiment (SE) object.  
+#### 1. Load Summarized Experiment (SE) object.  
 
 The SE object contains count table and associated metadata. 
-```{r se}
+```{r se, warning=FALSE, message=FALSE}
 se <- readRDS(system.file("extdata", "se_vic3_2020.RData", package = "vic3PCD"))
+
 ```
 
-2. Process raw data with DESeq2
+To create your own metadata table and add it to SE object see Appendix A.
+```{r coldt, warning=FALSE, message=FALSE, echo=FALSE}
+tbl <- as.data.frame(colData(se))
 
-```{r dds}
+kable(tbl, escape = F, linesep = "", booktabs = T, longtable = F, caption = "Summarized Experiment Metadata") %>%
+  kable_styling(latex_options = c("scale_down", "repeat_header"), bootstrap_options = c("condensed"), font_size = 12, full_width = F)
+```
+
+
+#### 2. Process raw data with DESeq2.  
+Now that we have counts and metadata looks good we proceed with Differential expression analysis.
+
+```{r dds, warning=FALSE, message=FALSE}
 dds <- DESeqDataSet(se, design = ~ condition)
-dds$condition <- droplevels(dds$condition)
-dds$strains <- droplevels(dds$strains)
+
+# Collapse replicas
 dds <- collapseReplicates(dds, dds$exset)
 
+# To make sure we have right category used as reference in the analysis
 dds$condition <- relevel(dds$condition, ref = "Control")
+
+# DESeq analysis
 dds <- DESeq(dds, test = "Wald", sfType = "poscounts", useT = FALSE, minReplicatesForReplace = 7)
+
+# Filter genes with more than 10 aligned reads
 keep <- rowSums(counts(dds)) >= 10
 dds <- dds[keep,]
 
+# Normised counts
 rld <- rlog(dds, blind = F)
-nt <- normTransform(dds, f = log2, pc = 1)
+```
+
+#### 3. Principal Component Analysis
+
+PCA allows to get an overall view on gene expression between samples.
+```{r pca}
+# Manual color
+clr = c("dodgerblue3", "coral3")
+names(clr) <- unique(colData(rld)[,"condition"])
+
+vic3_plotPCA(counts = assay(rld), group_vector = colData(rld)[,"condition"]) +
+  scale_colour_manual(values=clr, name = "Condition:") +
+  geom_text(label = colData(rld)[,"exset"], size = 3, colour = "black", fontface = "italic", hjust = 0, nudge_x = 3) +
+  xlim(-20,60) +
+  ylim(-25,25) 
+```
+Raw counts distribution
+
+```{r boxplot}
+vic3_boxplot(counts = assay(rld))
 ```
 
