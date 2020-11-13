@@ -1,9 +1,9 @@
 Transcriptome analysis of *Cryphonectria parasititca* allorecognotion
 =======
 
-**The package is a supplementary material:**  
+**The package is a supplementary material to:**  
 Transcriptome analysis implicates secondary metabolite production, redox reactions and programmed cell death during allorecognition in *Cryphonectria parasitica*.  
-*Belov, A., Witte, T., Overy, D., Smith, M.*
+*Belov, A., Witte, T., Overy, D., Smith, M.*. G3: GENES, GENOMES, GENETICS. 2020
 
 
 ### Introduction
