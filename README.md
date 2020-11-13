@@ -8,9 +8,9 @@ Transcriptome analysis implicates secondary metabolite production, redox reactio
 
 ### Introduction
 
-When two genetically distinct fungal strains make a hyphal contact (fuse) this triggers a cell death. Multiple fused hyphae along the line of the contact form a separation line made out of the dead hyphae. This searation line is called barrage. Its primary function is to separate genetically distinct strains to prevent the exchange of cellular content.  
+When two genetically distinct fungal strains make a hyphal contact (fuse) this triggers a cell death. Multiple fused hyphae along the line of the contact form a separation line made out of the dead hyphae. This separation line is called barrage. Its primary function is to separate genetically distinct strains to prevent the exchange of cellular content.  
 
-Here we make an attempt to understand the molecular processes that control allorecognition in *C. parasitica*, chestnut blight felamentous fungus. 
+Here we make an attempt to understand the molecular processes that control allorecognition in *C. parasitica*, chestnut blight filamentous fungus.  
 
 - What triggers cell death in incompatible hyphae?
 - What genes play major role?

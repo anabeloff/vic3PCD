@@ -1,34 +1,17 @@
----
-title: "Part 4. Hierarchical clustering"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Part_4}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-```{r, include = FALSE}
+## ---- include = FALSE---------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-```
 
-Clustering genes by differential expression value allow to locate genes which were affected the most.  
-Here we use the wrapper function 'clusterGenes' to produce a heatmap of significant DE genes.
-
-```{r setup}
+## ----setup--------------------------------------------------------------------
 library(vic3PCD)
 suppressMessages(library(pheatmap))
 suppressMessages(library(kableExtra))
 suppressMessages(library(DESeq2))
 suppressMessages(library(RColorBrewer))
-```
 
-#### Annotation
-
-Creating annotation object. Here we combine novel and existing annotations in a single data frame.
-```{r annotation}
+## ----annotation---------------------------------------------------------------
 # Load Novel transcripts annotation
 annot_novel <- readRDS(system.file("extdata", "GenesTableFull_cp_NOVEL_annotation.rda", package = "vic3PCD"))
 
@@ -37,12 +20,8 @@ annot <- readRDS(system.file("extdata", "GenesTableFull_cp_annotation.rda", pack
   dplyr::bind_rows(annot_novel) %>%
   tibble::remove_rownames()
 # rownames(annot) <- annot$gene_id
-```
 
-#### Data
-
-Creading DESeq2 data object using SE object 
-```{r data, warning=FALSE, message=FALSE, cache=TRUE}
+## ----data, warning=FALSE, message=FALSE, cache=TRUE---------------------------
 # Load SE dataset
 se <- readRDS(system.file("extdata", "se_vic3_2020.RData", package = "vic3PCD"))
 
@@ -58,17 +37,8 @@ dds <- DESeq(dds, test = "Wald", sfType = "poscounts", useT = FALSE, minReplicat
 # Filter genes with more than 10 aligned reads
 keep <- rowSums(counts(dds)) >= 10
 dds <- dds[keep,]
-```
 
-## Hierarchical Clustering
-To perform clustering with 'clusterGenes' first we define a significance threshold.  
-Genes will be filtered based on significance p-value produced by DESeq2 and DE value.  
-
-To identify the number of clusters use the tree on the left. Imagine a vertical line going through the tree. Place it so that it crosses horizontal lines on the tree without crossing any vertical line. Count how many horizontal lines it crosses. That will give an approximate number of clusters.  
-
-The heatamp the right most column contains sample means for each gene (row means).
-
-```{r hc, warning=FALSE, fig.width=6, fig.height=6}
+## ----hc, warning=FALSE, fig.width=6, fig.height=6-----------------------------
 # Threshold values
 val = 1.9
 pval = 0.001
@@ -84,11 +54,8 @@ groups <- clusterGenes(dds = dds,
                         clusterMethod = "average")
 
 
-```
 
-Here is a partial view on clustering table.
-
-```{r hc table}
+## ----hc table-----------------------------------------------------------------
 tbl <- dplyr::arrange(groups,desc(log2FoldChange))
 
 tbl <- tbl[c(1:10), c("gene_id", "proteinId", "X6_3_EP155mix", "X6_4_EP155mix", "X6_5_EP155mix", "Mean", "baseMean", "log2FoldChange", "pvalue")]
@@ -96,14 +63,8 @@ tbl <- tbl[c(1:10), c("gene_id", "proteinId", "X6_3_EP155mix", "X6_4_EP155mix", 
 kable(tbl, escape = F, linesep = "", booktabs = T, longtable = F, caption = "Hierarchical Clustering (partial)") %>%
   kable_styling(latex_options = c("scale_down", "repeat_header"), bootstrap_options = c("condensed"), font_size = 12, full_width = F) %>%
     column_spec(1, bold = T)
-```
 
-
-Another useful option for 'clusterGenes' function is to make a heatmap of average DE values in each cluster for in individual samples. 
-This is a summarised version of Hierarchical clustering plot. In addition to row means column it also creates a variance column for each cluster.
-
-
-```{r hc sum, warning=FALSE, fig.width=6, fig.height=6}
+## ----hc sum, warning=FALSE, fig.width=6, fig.height=6-------------------------
 groups <- clusterGenes(dds = dds,
                         annotationTbl = annot,
                         summarise_clusters = TRUE,
@@ -112,7 +73,4 @@ groups <- clusterGenes(dds = dds,
                         cutTree = clastTree,
                         distRows = "euclidean",
                         clusterMethod = "average")
-```
-
-
 
