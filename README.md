@@ -45,8 +45,6 @@ Three monoculture samples (EP155, P74-3, DZ-66) were used as controls. Two barra
 
 For further details see vignettes
 
-[Part 1](doc/Part_1.html)
-
 ```{r}
 vignette("Part_1")
 vignette("Part_2")
