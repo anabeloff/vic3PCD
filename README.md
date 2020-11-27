@@ -5,6 +5,14 @@ Transcriptome analysis of *Cryphonectria parasititca* allorecognotion
 Transcriptome analysis implicates secondary metabolite production, redox reactions and programmed cell death during allorecognition in *Cryphonectria parasitica*.  
 *Belov, A., Witte, T., Overy, D., Smith, M.*. G3: GENES, GENOMES, GENETICS. 2020
 
+### Installation
+
+```{r}
+library("devtools")
+
+# Install from GitHub
+install_github("anabeloff/vic3PCD", build_vignettes = TRUE)
+```
 
 ### Introduction
 
@@ -32,3 +40,16 @@ Strains list and original samples codes used for sequencing in FASTQ file names:
 We developed a blending technique that allows to maximise the number of contacts formed when two incompatible strains are co-inoculated together. 
 
 Three monoculture samples (EP155, P74-3, DZ-66) were used as controls. Two barrage samples were created by mixing  equal volumes of monoculture suspensions of incompatible strains (EP155 vs. P74-3 and DZ-66 vs. P74-3). Barrage sample with vic3 knockouts (DZ-66 vs. P74-3) was also used as a control in further analyses. 
+
+### Vignettes
+
+For further details see vignettes
+
+[Part 1](doc/Part_1.html)
+
+```{r}
+vignette("Part_1")
+vignette("Part_2")
+vignette("Part_3")
+vignette("Part_4")
+```
